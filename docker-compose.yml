@@ -1,0 +1,33 @@
+#docker-composeのバージョン
+version: '3'
+
+#service: アプリケーションを動かす各要素(今回は、dbがmysql , webがRailsを表す)
+services:
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+  web:
+    build: .
+    command:  bundle exec rails s -p 3000 -b '0.0.0.0'
+
+    #ホストの./srcをコンテナ内の/appに同期する(コンテナを破棄してもデータが残る)
+    #.は全てのファイルを表す
+    volumes:
+      - ./src:/app
+
+    #コンテナ内のポート番号をホストの番号にマッピングする
+    #仮想環境にアクセスできるようにする
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+    
+    #依存関係を表す.起動順を制御できる(db→web)
+    depends_on:
+      - db
+volumes:
+  mysql-data:
